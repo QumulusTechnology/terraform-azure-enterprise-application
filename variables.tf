@@ -128,8 +128,12 @@ variable "azuread_role_assignments" {
 
 variable "app_roles" {
   description = "List of application roles"
-  type        = list(string)
-  default     = []
+  type = list(object({
+    role  = string
+    groups_to_assign = list(string)
+    users_to_assign = list(string)
+  }))
+  default = []
 }
 
 variable "optional_claims_access_tokens" {

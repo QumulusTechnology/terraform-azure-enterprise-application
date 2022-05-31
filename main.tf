@@ -4,6 +4,44 @@ locals {
   application_role_assignments_applications = flatten([for application_key, application in var.application_role_assignments : [application.application]])
   display_name                              = var.display_name == null ? var.name : var.display_name
   api_name                                  = var.api_name == null ? var.name : var.api_name
+  azuread_users                             = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id })
+  published_apps                            = { for k, v in data.azuread_application_published_app_ids.well_known.result : v => k }
+  published_apps_object_ids                 = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id })
+  resource_app_ids                          = [ for application_key, application in var.application_role_assignments :  data.azuread_application_published_app_ids.well_known.result[application.application] ]
+
+
+
+  role_assignments = flatten([
+    for application_key, application in var.application_role_assignments[*] : [
+      for role in application.application_roles : {
+        key  = "${application.application}_${role}"
+        role = role
+        application =  application.application
+        role_id =  azuread_service_principal.application[index(local.application_role_assignments_applications, application.application)].app_role_ids[role]
+        application_object_id = azuread_service_principal.application[index(local.application_role_assignments_applications, application.application)].object_id
+      }
+    ]
+  ])
+
+  app_role_groups_to_assign = flatten([
+    for role_key, role in var.app_roles : [
+      for group in role.groups_to_assign : {
+        key   = role_key
+        role  = role.role
+        group = group
+      }
+    ]
+  ])
+
+  app_role_users_to_assign = flatten([
+    for role_key, role in var.app_roles : [
+      for user in role.users_to_assign : {
+        key  = role_key
+        role = role.role
+        user = user
+      }
+    ]
+  ])
 }
 
 data "azurerm_subscription" "current" {}
@@ -11,6 +49,15 @@ data "azurerm_subscription" "current" {}
 data "azurerm_client_config" "current" {}
 
 data "azuread_application_published_app_ids" "well_known" {}
+
+data "azuread_groups" "all" {
+  return_all       = true
+  security_enabled = true
+}
+
+data "azuread_users" "all" {
+  return_all = true
+}
 
 resource "azuread_service_principal" "application" {
   count          = length(local.application_role_assignments_applications)
@@ -59,11 +106,11 @@ resource "azuread_application" "this" {
         "Application",
         "User",
       ]
-      description  = "${role.value}"
-      display_name = "${role.value}"
+      description  = role.value.role
+      display_name = role.value.role
       enabled      = true
       id           = random_uuid.application_roles[index(var.app_roles, role.value)].result
-      value        = lower(role.value)
+      value        = lower(role.value.role)
     }
   }
 
@@ -194,4 +241,31 @@ resource "azuread_directory_role_member" "this" {
   count            = length(var.azuread_role_assignments)
   role_object_id   = azuread_directory_role.this[count.index].object_id
   member_object_id = azuread_service_principal.this.object_id
+}
+
+resource "azuread_app_role_assignment" "groups" {
+  for_each            = { for arg in local.app_role_groups_to_assign : arg.key => arg.group }
+  app_role_id         = tolist(azuread_application.this.app_role)[each.key].id
+  resource_object_id  = azuread_service_principal.this.object_id
+  principal_object_id = data.azuread_groups.all.object_ids[index(data.azuread_groups.all.display_names, each.value)]
+}
+
+resource "azuread_app_role_assignment" "users" {
+  for_each            = { for arg in local.app_role_users_to_assign : arg.key => arg.user }
+  app_role_id         = tolist(azuread_application.this.app_role)[each.key].id
+  resource_object_id  = azuread_service_principal.this.object_id
+  principal_object_id = local.azuread_users[each.value]
+}
+
+
+resource "azuread_app_role_assignment" "this" {
+  for_each = { for assignment in local.role_assignments : assignment.key => assignment }
+  app_role_id         = each.value.role_id
+  principal_object_id = azuread_service_principal.this.object_id
+  resource_object_id  = each.value.application_object_id
+}
+
+data "azuread_service_principal" "resource_app" {
+  count          = length(local.resource_app_ids)
+  application_id = local.resource_app_ids[count.index]
 }
