@@ -59,11 +59,11 @@ resource "azuread_application" "this" {
         "Application",
         "User",
       ]
-      description  = "${var.name} ${role.value}"
-      display_name = "${var.name} ${role.value}"
+      description  = "${role.value}"
+      display_name = "${role.value}"
       enabled      = true
       id           = random_uuid.application_roles[index(var.app_roles, role.value)].result
-      value        = "${lower(var.name)}.${lower(role.value)}"
+      value        = lower(role.value)
     }
   }
 
