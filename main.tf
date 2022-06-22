@@ -4,9 +4,9 @@ locals {
   application_role_assignments_applications = flatten([for application_key, application in var.application_role_assignments : [application.application]])
   display_name                              = var.display_name == null ? var.name : var.display_name
   api_name                                  = var.api_name == null ? var.name : var.api_name
-  azuread_users                             = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id })
+  azuread_users                             = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != ""})
   published_apps                            = { for k, v in data.azuread_application_published_app_ids.well_known.result : v => k }
-  published_apps_object_ids                 = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id })
+  published_apps_object_ids                 = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != ""})
   resource_app_ids                          = [ for application_key, application in var.application_role_assignments :  data.azuread_application_published_app_ids.well_known.result[application.application] ]
 
 
