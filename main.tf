@@ -237,10 +237,10 @@ resource "azuread_directory_role" "this" {
   display_name = var.azuread_role_assignments[count.index]
 }
 
-resource "azuread_directory_role_member" "this" {
+resource "azuread_directory_role_assignment" "this" {
   count            = length(var.azuread_role_assignments)
-  role_object_id   = azuread_directory_role.this[count.index].object_id
-  member_object_id = azuread_service_principal.this.object_id
+  role_id   = azuread_directory_role.this[count.index].object_id
+  principal_object_id = azuread_service_principal.this.object_id
 }
 
 resource "azuread_app_role_assignment" "groups" {
