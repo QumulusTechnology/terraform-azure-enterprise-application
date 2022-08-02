@@ -129,9 +129,9 @@ variable "azuread_role_assignments" {
 variable "app_roles" {
   description = "List of application roles"
   type = list(object({
-    role  = string
+    role             = string
     groups_to_assign = list(string)
-    users_to_assign = list(string)
+    users_to_assign  = list(string)
   }))
   default = []
 }

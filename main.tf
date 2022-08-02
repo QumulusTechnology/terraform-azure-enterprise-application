@@ -4,20 +4,20 @@ locals {
   application_role_assignments_applications = flatten([for application_key, application in var.application_role_assignments : [application.application]])
   display_name                              = var.display_name == null ? var.name : var.display_name
   api_name                                  = var.api_name == null ? var.name : var.api_name
-  azuread_users                             = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != ""})
+  azuread_users                             = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != "" })
   published_apps                            = { for k, v in data.azuread_application_published_app_ids.well_known.result : v => k }
-  published_apps_object_ids                 = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != ""})
-  resource_app_ids                          = [ for application_key, application in var.application_role_assignments :  data.azuread_application_published_app_ids.well_known.result[application.application] ]
+  published_apps_object_ids                 = tomap({ for k in data.azuread_users.all.users : k.mail => k.object_id if k.mail != "" })
+  resource_app_ids                          = [for application_key, application in var.application_role_assignments : data.azuread_application_published_app_ids.well_known.result[application.application]]
 
 
 
   role_assignments = flatten([
     for application_key, application in var.application_role_assignments[*] : [
       for role in application.application_roles : {
-        key  = "${application.application}_${role}"
-        role = role
-        application =  application.application
-        role_id =  azuread_service_principal.application[index(local.application_role_assignments_applications, application.application)].app_role_ids[role]
+        key                   = "${application.application}_${role}"
+        role                  = role
+        application           = application.application
+        role_id               = azuread_service_principal.application[index(local.application_role_assignments_applications, application.application)].app_role_ids[role]
         application_object_id = azuread_service_principal.application[index(local.application_role_assignments_applications, application.application)].object_id
       }
     ]
@@ -238,8 +238,8 @@ resource "azuread_directory_role" "this" {
 }
 
 resource "azuread_directory_role_assignment" "this" {
-  count            = length(var.azuread_role_assignments)
-  role_id   = azuread_directory_role.this[count.index].object_id
+  count               = length(var.azuread_role_assignments)
+  role_id             = azuread_directory_role.this[count.index].object_id
   principal_object_id = azuread_service_principal.this.object_id
 }
 
@@ -259,7 +259,7 @@ resource "azuread_app_role_assignment" "users" {
 
 
 resource "azuread_app_role_assignment" "this" {
-  for_each = { for assignment in local.role_assignments : assignment.key => assignment }
+  for_each            = { for assignment in local.role_assignments : assignment.key => assignment }
   app_role_id         = each.value.role_id
   principal_object_id = azuread_service_principal.this.object_id
   resource_object_id  = each.value.application_object_id
@@ -268,4 +268,26 @@ resource "azuread_app_role_assignment" "this" {
 data "azuread_service_principal" "resource_app" {
   count          = length(local.resource_app_ids)
   application_id = local.resource_app_ids[count.index]
+}
+
+
+resource "time_sleep" "grant_admin_consent_wait" {
+  depends_on = [
+    azuread_app_role_assignment.this,
+    azuread_service_principal.this
+  ]
+
+  create_duration = "30s"
+}
+
+resource "null_resource" "grant_admin_consent" {
+  provisioner "local-exec" {
+    command     = <<EOT
+az ad app permission admin-consent --id ${azuread_application.this.application_id}
+EOT
+    interpreter = ["/bin/bash", "-c"]
+  }
+  depends_on = [
+    time_sleep.grant_admin_consent_wait
+  ]
 }
