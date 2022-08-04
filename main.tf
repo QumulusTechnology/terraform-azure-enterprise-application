@@ -77,7 +77,6 @@ resource "azuread_application" "this" {
   display_name     = local.display_name
   sign_in_audience = var.sign_in_audience
   identifier_uris  = ["api://${lower(var.api_name)}"]
-  owners           = [data.azurerm_client_config.current.object_id]
 
   api {
     mapped_claims_enabled = var.mapped_claims_enabled
@@ -188,6 +187,12 @@ resource "azuread_application" "this" {
     gallery               = var.gallery
     hide                  = var.hide
   }
+
+  lifecycle {
+    ignore_changes = [
+      owners
+    ]
+  }
 }
 
 resource "azuread_application_password" "this" {
@@ -198,9 +203,13 @@ resource "azuread_application_password" "this" {
 resource "azuread_service_principal" "this" {
   application_id               = azuread_application.this.application_id
   app_role_assignment_required = var.app_role_assignment_required
-  owners                       = [data.azurerm_client_config.current.object_id]
   alternative_names            = var.service_principal_alternative_names
   description                  = var.description
+  lifecycle {
+    ignore_changes = [
+      owners
+    ]
+  }
 }
 
 resource "time_rotating" "this" {

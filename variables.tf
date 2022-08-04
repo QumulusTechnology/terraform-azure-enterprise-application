@@ -191,7 +191,8 @@ variable "hide" {
 }
 
 variable "create_application_password" {
-  description = "Whether tp create an application password"
+  description = "Whether to create an application password"
   type        = bool
   default     = true
 }
+
