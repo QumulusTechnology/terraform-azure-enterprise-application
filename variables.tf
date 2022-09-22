@@ -196,8 +196,8 @@ variable "create_application_password" {
   default     = true
 }
 
-variable "group_membership_claims" { 
+variable "group_membership_claims" {
   description = "(Optional) Configures the groups claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are None, SecurityGroup, DirectoryRole, ApplicationGroup or All"
-  type = string
-  default = "None"
+  type        = list(string)
+  default     = []
 }
