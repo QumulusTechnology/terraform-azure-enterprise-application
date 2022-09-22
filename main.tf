@@ -188,6 +188,8 @@ resource "azuread_application" "this" {
     hide                  = var.hide
   }
 
+  group_membership_claims = var.group_membership_claims
+
   lifecycle {
     ignore_changes = [
       owners
