@@ -135,7 +135,7 @@ resource "azuread_application" "this" {
     }
 
     dynamic "saml2_token" {
-      for_each = var.optional_claims_saml2_token
+      for_each = var.optional_claims_saml2_tokens
       iterator = token
       content {
         additional_properties = []

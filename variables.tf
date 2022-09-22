@@ -148,7 +148,7 @@ variable "optional_claims_id_tokens" {
   default     = []
 }
 
-variable "optional_claims_saml2_token" {
+variable "optional_claims_saml2_tokens" {
   description = "List of optional_claim saml2 tokens"
   type        = list(string)
   default     = []
