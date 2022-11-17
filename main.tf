@@ -154,6 +154,10 @@ resource "azuread_application" "this" {
     }
   }
 
+  public_client {
+    redirect_uris = var.public_client_redirect_uris
+  }
+
   dynamic "required_resource_access" {
     for_each = var.application_role_assignments
     iterator = app

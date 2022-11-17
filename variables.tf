@@ -26,6 +26,12 @@ variable "service_principal_alternative_names" {
   default     = []
 }
 
+variable "public_client_redirect_uris" {
+  type        = list(string)
+  description = "A set of non-web API application redirect Uris."
+  default     = []
+}
+
 variable "sign_in_audience" {
   description = "The Microsoft account types that are supported for the current application. Must be one of `AzureADMyOrg`, `AzureADMultipleOrgs`, `AzureADandPersonalMicrosoftAccount` or `PersonalMicrosoftAccount`"
   default     = "AzureADMyOrg"
