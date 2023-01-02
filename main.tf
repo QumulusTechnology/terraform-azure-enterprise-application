@@ -147,6 +147,7 @@ resource "azuread_application" "this" {
   }
 
   web {
+    homepage_url  = var.homepage_url
     redirect_uris = var.redirect_uris
     implicit_grant {
       access_token_issuance_enabled = local.access_token_issuance_enabled
@@ -207,10 +208,13 @@ resource "azuread_application_password" "this" {
 }
 
 resource "azuread_service_principal" "this" {
-  application_id               = azuread_application.this.application_id
-  app_role_assignment_required = var.app_role_assignment_required
-  alternative_names            = var.service_principal_alternative_names
-  description                  = var.description
+  application_id                = azuread_application.this.application_id
+  app_role_assignment_required  = var.app_role_assignment_required
+  alternative_names             = var.service_principal_alternative_names
+  description                   = var.description
+  notification_email_addresses  = var.saml_cert_notification_email_addresses
+  preferred_single_sign_on_mode = var.preferred_single_sign_on_mode
+  tags                          = var.azuread_service_principal_tags
   lifecycle {
     ignore_changes = [
       owners
