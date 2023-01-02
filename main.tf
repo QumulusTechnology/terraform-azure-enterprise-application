@@ -76,7 +76,7 @@ resource "random_uuid" "application_roles" {
 resource "azuread_application" "this" {
   display_name     = local.display_name
   sign_in_audience = var.sign_in_audience
-  identifier_uris  = ["api://${lower(var.api_name)}"]
+  identifier_uris  = ["https://${lower(var.api_name)}"]
 
   api {
     mapped_claims_enabled = var.mapped_claims_enabled
