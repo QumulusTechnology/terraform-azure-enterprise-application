@@ -208,25 +208,25 @@ variable "group_membership_claims" {
   default     = []
 }
 
-var "saml_cert_notification_email_addresses" {
+variable "saml_cert_notification_email_addresses" {
   description = "A set of email addresses where Azure AD sends a notification when the active certificate is near the expiration date. This is only for the certificates used to sign the SAML token issued for Azure AD Gallery applications"
   type        = list(string)
   default     = []
 }
 
-var "preferred_single_sign_on_mode" {
+variable "preferred_single_sign_on_mode" {
   description = "the single sign-on mode configured for this application. Azure AD uses the preferred single sign-on mode to launch the application from Microsoft 365 or the Azure AD My Apps. Supported values are oidc, password, saml or notSupported. Omit this property or specify a blank string to unset"
   type        = string
   default     = null
 }
 
-var "azuread_service_principal_tags" {
+variable "azuread_service_principal_tags" {
   description = "A set of tags to apply to the service principal such as WindowsAzureActiveDirectoryCustomSingleSignOnApplication and WindowsAzureActiveDirectoryIntegratedApp"
   type        = list(string)
   default     = null
 }
 
-var "homepage_url" {
+variable "homepage_url" {
   description = "Home page or landing page of the application"
   type        = string
   default     = null
