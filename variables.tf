@@ -231,3 +231,8 @@ variable "homepage_url" {
   type        = string
   default     = null
 }
+
+variable "azure_tenant_id" {
+  type = string
+  description = "(required) The Azure AD tenant ID to authenticate with"
+}

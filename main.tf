@@ -1,3 +1,11 @@
+provider "azurerm" {
+  features {}
+}
+
+provider "azuread" {
+  tenant_id = var.azure_tenant_id
+}
+
 locals {
   access_token_issuance_enabled             = length(var.optional_claims_access_tokens) > 0 ? true : false
   id_token_issuance_enabled                 = length(var.optional_claims_id_tokens) > 0 ? true : false
@@ -290,23 +298,44 @@ data "azuread_service_principal" "resource_app" {
 }
 
 
-resource "time_sleep" "grant_admin_consent_wait" {
-  depends_on = [
-    azuread_app_role_assignment.this,
-    azuread_service_principal.this
-  ]
+# resource "time_sleep" "grant_admin_consent_wait" {
+#   depends_on = [
+#     azuread_app_role_assignment.this,
+#     azuread_service_principal.this
+#   ]
 
-  create_duration = "30s"
+#   create_duration = "30s"
+# }
+
+# resource "null_resource" "grant_admin_consent" {
+#   provisioner "local-exec" {
+#     command     = <<EOT
+# az ad app permission admin-consent --id ${azuread_application.this.application_id}
+# EOT
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+#   depends_on = [
+#     time_sleep.grant_admin_consent_wait
+#   ]
+# }
+
+
+resource "azuread_service_principal" "application_role_assignments" {
+  count          = length(var.application_role_assignments)
+  application_id = data.azuread_application_published_app_ids.well_known.result[var.application_role_assignments[count.index].application]
+  use_existing   = true
 }
 
-resource "null_resource" "grant_admin_consent" {
-  provisioner "local-exec" {
-    command     = <<EOT
-az ad app permission admin-consent --id ${azuread_application.this.application_id}
-EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-  depends_on = [
-    time_sleep.grant_admin_consent_wait
-  ]
+# resource "azuread_service_principal_delegated_permission_grant" "application_roles" {
+#   count          = length(var.application_role_assignments)
+#   service_principal_object_id          = azuread_service_principal.this.object_id
+#   resource_service_principal_object_id = azuread_service_principal.application_role_assignments[count.index].object_id
+#   claim_values                         = var.application_role_assignments[count.index].application_roles
+# }
+
+resource "azuread_service_principal_delegated_permission_grant" "delegated_roles" {
+  count          = length(var.application_role_assignments)
+  service_principal_object_id          = azuread_service_principal.this.object_id
+  resource_service_principal_object_id = azuread_service_principal.application_role_assignments[count.index].object_id
+  claim_values                         = var.application_role_assignments[count.index].delegated_roles
 }
