@@ -24,14 +24,19 @@ output "service_principal_application_id" {
   value       = azuread_service_principal.this.application_id
 }
 
+output "application_object_id" {
+  description = "The object id of application."
+  value       = azuread_application.this.object_id
+}
+
 output "service_principal_password" {
   description = "Password for service principal."
-  value       = azuread_service_principal_password.this[0].value
+  value       = try(azuread_service_principal_password.this[0].value, null)
   sensitive   = true
 }
 
 output "application_password" {
   description = "Azure Application password"
   sensitive   = true
-  value       = azuread_application_password.this[0].value
+  value       = try(azuread_application_password.this[0].value, null)
 }

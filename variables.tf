@@ -202,6 +202,12 @@ variable "create_application_password" {
   default     = true
 }
 
+variable "create_service_principal_password" {
+  description = "Whether to create a service principal password"
+  type        = bool
+  default     = true
+}
+
 variable "group_membership_claims" {
   description = "(Optional) Configures the groups claim issued in a user or OAuth 2.0 access token that the app expects. Possible values are None, SecurityGroup, DirectoryRole, ApplicationGroup or All"
   type        = list(string)

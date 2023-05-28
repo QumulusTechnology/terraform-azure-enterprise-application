@@ -244,7 +244,7 @@ resource "time_rotating" "this" {
 }
 
 resource "azuread_service_principal_password" "this" {
-  count                = var.enable_service_principal_certificate == false ? 1 : 0
+  count                 = var.create_service_principal_password ? 1 : 0
   service_principal_id = azuread_service_principal.this.object_id
   rotate_when_changed = {
     rotation = var.enable_password_rotation ? time_rotating.this[0].id : null
@@ -284,7 +284,6 @@ resource "azuread_app_role_assignment" "users" {
   principal_object_id = local.azuread_users[each.value]
 }
 
-
 resource "azuread_app_role_assignment" "this" {
   for_each            = { for assignment in local.role_assignments : assignment.key => assignment }
   app_role_id         = each.value.role_id
@@ -297,41 +296,11 @@ data "azuread_service_principal" "resource_app" {
   application_id = local.resource_app_ids[count.index]
 }
 
-
-# resource "time_sleep" "grant_admin_consent_wait" {
-#   depends_on = [
-#     azuread_app_role_assignment.this,
-#     azuread_service_principal.this
-#   ]
-
-#   create_duration = "30s"
-# }
-
-# resource "null_resource" "grant_admin_consent" {
-#   provisioner "local-exec" {
-#     command     = <<EOT
-# az ad app permission admin-consent --id ${azuread_application.this.application_id}
-# EOT
-#     interpreter = ["/bin/bash", "-c"]
-#   }
-#   depends_on = [
-#     time_sleep.grant_admin_consent_wait
-#   ]
-# }
-
-
 resource "azuread_service_principal" "application_role_assignments" {
   count          = length(var.application_role_assignments)
   application_id = data.azuread_application_published_app_ids.well_known.result[var.application_role_assignments[count.index].application]
   use_existing   = true
 }
-
-# resource "azuread_service_principal_delegated_permission_grant" "application_roles" {
-#   count          = length(var.application_role_assignments)
-#   service_principal_object_id          = azuread_service_principal.this.object_id
-#   resource_service_principal_object_id = azuread_service_principal.application_role_assignments[count.index].object_id
-#   claim_values                         = var.application_role_assignments[count.index].application_roles
-# }
 
 resource "azuread_service_principal_delegated_permission_grant" "delegated_roles" {
   count          = length(var.application_role_assignments)
