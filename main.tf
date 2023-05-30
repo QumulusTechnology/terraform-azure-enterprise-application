@@ -1,11 +1,3 @@
-provider "azurerm" {
-  features {}
-}
-
-provider "azuread" {
-  tenant_id = var.azure_tenant_id
-}
-
 locals {
   access_token_issuance_enabled             = length(var.optional_claims_access_tokens) > 0 ? true : false
   id_token_issuance_enabled                 = length(var.optional_claims_id_tokens) > 0 ? true : false
@@ -52,11 +44,9 @@ locals {
   ])
 }
 
-data "azurerm_subscription" "current" {}
-
-data "azurerm_client_config" "current" {}
-
 data "azuread_application_published_app_ids" "well_known" {}
+
+data "azuread_client_config" "current" {}
 
 data "azuread_groups" "all" {
   return_all       = true
@@ -249,14 +239,6 @@ resource "azuread_service_principal_password" "this" {
   rotate_when_changed = {
     rotation = var.enable_password_rotation ? time_rotating.this[0].id : null
   }
-}
-
-resource "azurerm_role_assignment" "this" {
-  count                = length(var.resource_role_assignments)
-  scope                = var.resource_role_assignments[count.index].scope
-  role_definition_name = var.resource_role_assignments[count.index].role
-  principal_id         = azuread_service_principal.this.object_id
-  description          = "${var.name} Service Principal"
 }
 
 resource "azuread_directory_role" "this" {

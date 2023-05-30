@@ -116,15 +116,6 @@ variable "application_role_assignments" {
   default = []
 }
 
-variable "resource_role_assignments" {
-  description = "List of Azure Subscription Resource role assignments to this service principal"
-  type = list(object({
-    scope = string
-    role  = string
-  }))
-  default = []
-}
-
 variable "azuread_role_assignments" {
   description = "List of Azure AD roles to assign to to this service principal"
   type        = list(string)
@@ -238,7 +229,3 @@ variable "homepage_url" {
   default     = null
 }
 
-variable "azure_tenant_id" {
-  type = string
-  description = "(required) The Azure AD tenant ID to authenticate with"
-}

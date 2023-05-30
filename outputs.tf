@@ -6,12 +6,7 @@ output "client_id" {
 
 output "tenant_id" {
   description = "Azure Tenant ID"
-  value       = data.azurerm_subscription.current.tenant_id
-}
-
-output "subscription_id" {
-  description = "Azure subscription ID"
-  value       = data.azurerm_subscription.current.subscription_id
+  value       = data.azuread_client_config.current.tenant_id
 }
 
 output "service_principal_object_id" {
