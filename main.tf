@@ -234,7 +234,7 @@ resource "time_rotating" "this" {
 }
 
 resource "azuread_service_principal_password" "this" {
-  count                 = var.create_service_principal_password ? 1 : 0
+  count                = var.create_service_principal_password ? 1 : 0
   service_principal_id = azuread_service_principal.this.object_id
   rotate_when_changed = {
     rotation = var.enable_password_rotation ? time_rotating.this[0].id : null
@@ -253,17 +253,17 @@ resource "azuread_directory_role_assignment" "this" {
 }
 
 resource "azuread_app_role_assignment" "groups" {
-  for_each            = { for arg in local.app_role_groups_to_assign : arg.key => arg.group }
-  app_role_id         = tolist(azuread_application.this.app_role)[each.key].id
+  for_each            = { for arg in local.app_role_groups_to_assign : "${arg.group}.${arg.key}" => arg }
+  app_role_id         = tolist(azuread_application.this.app_role)[each.value.key].id
   resource_object_id  = azuread_service_principal.this.object_id
-  principal_object_id = data.azuread_groups.all.object_ids[index(data.azuread_groups.all.display_names, each.value)]
+  principal_object_id = data.azuread_groups.all.object_ids[index(data.azuread_groups.all.display_names, each.value.group)]
 }
 
 resource "azuread_app_role_assignment" "users" {
-  for_each            = { for arg in local.app_role_users_to_assign : arg.key => arg.user }
-  app_role_id         = tolist(azuread_application.this.app_role)[each.key].id
+  for_each            = { for arg in local.app_role_users_to_assign : "${arg.user}.${arg.key}" => arg }
+  app_role_id         = tolist(azuread_application.this.app_role)[each.value.key].id
   resource_object_id  = azuread_service_principal.this.object_id
-  principal_object_id = local.azuread_users[each.value]
+  principal_object_id = local.azuread_users[each.value.user]
 }
 
 resource "azuread_app_role_assignment" "this" {
@@ -285,7 +285,7 @@ resource "azuread_service_principal" "application_role_assignments" {
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "delegated_roles" {
-  count          = length(var.application_role_assignments)
+  count                                = length(var.application_role_assignments)
   service_principal_object_id          = azuread_service_principal.this.object_id
   resource_service_principal_object_id = azuread_service_principal.application_role_assignments[count.index].object_id
   claim_values                         = var.application_role_assignments[count.index].delegated_roles
