@@ -1,7 +1,7 @@
 
-output "client_id" {
+output "application_id" {
   description = "The application id of AzureAD application created."
-  value       = azuread_application.this.client_id
+  value       = azuread_application.this.application_id
 }
 
 output "tenant_id" {
