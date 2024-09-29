@@ -58,9 +58,9 @@ data "azuread_users" "all" {
 }
 
 resource "azuread_service_principal" "application" {
-  count          = length(local.application_role_assignments_applications)
-  application_id = data.azuread_application_published_app_ids.well_known.result[local.application_role_assignments_applications[count.index]]
-  use_existing   = true
+  count        = length(local.application_role_assignments_applications)
+  client_id    = data.azuread_application_published_app_ids.well_known.result[local.application_role_assignments_applications[count.index]]
+  use_existing = true
 }
 
 resource "random_uuid" "oauth_permission_scopes" {
@@ -201,12 +201,12 @@ resource "azuread_application" "this" {
 }
 
 resource "azuread_application_password" "this" {
-  count                 = var.create_application_password ? 1 : 0
-  application_object_id = azuread_application.this.object_id
+  count          = var.create_application_password ? 1 : 0
+  application_id = azuread_application.this.id
 }
 
 resource "azuread_service_principal" "this" {
-  application_id                = azuread_application.this.application_id
+  client_id                     = azuread_application.this.client_id
   app_role_assignment_required  = var.app_role_assignment_required
   alternative_names             = var.service_principal_alternative_names
   description                   = var.description
@@ -235,7 +235,7 @@ resource "time_rotating" "this" {
 
 resource "azuread_service_principal_password" "this" {
   count                = var.create_service_principal_password ? 1 : 0
-  service_principal_id = azuread_service_principal.this.object_id
+  service_principal_id = azuread_service_principal.this.id
   rotate_when_changed = {
     rotation = var.enable_password_rotation ? time_rotating.this[0].id : null
   }
@@ -274,14 +274,14 @@ resource "azuread_app_role_assignment" "this" {
 }
 
 data "azuread_service_principal" "resource_app" {
-  count          = length(local.resource_app_ids)
-  application_id = local.resource_app_ids[count.index]
+  count     = length(local.resource_app_ids)
+  client_id = local.resource_app_ids[count.index]
 }
 
 resource "azuread_service_principal" "application_role_assignments" {
-  count          = length(var.application_role_assignments)
-  application_id = data.azuread_application_published_app_ids.well_known.result[var.application_role_assignments[count.index].application]
-  use_existing   = true
+  count        = length(var.application_role_assignments)
+  client_id    = data.azuread_application_published_app_ids.well_known.result[var.application_role_assignments[count.index].application]
+  use_existing = true
 }
 
 resource "azuread_service_principal_delegated_permission_grant" "delegated_roles" {
